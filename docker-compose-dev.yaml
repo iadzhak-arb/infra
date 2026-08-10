@@ -1,0 +1,80 @@
+services:
+
+  traefik:
+    image: traefik:v3.7
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - "--api.insecure=false"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+  rmq:
+    image: rabbitmq:4.3-alpine
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+  scanner:
+    build: ../scanner
+    env_file: ./.env
+    depends_on:
+      rmq:
+        condition: service_healthy
+
+
+  auth:
+    build: ../auth
+    env_file: ./.env
+    volumes:
+      - ../auth:/app
+    command: fastapi dev --host 0.0.0.0 --port 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/auth/`)"
+      - "traefik.http.services.auth.loadbalancer.server.port=80"
+      - "traefik.http.routers.auth.entrypoints=web"
+
+
+  arb:
+    build: ../arb
+    env_file: ./.env
+    volumes:
+      - ../arb:/app
+    command: fastapi dev --host 0.0.0.0 --port 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.arb.rule=PathPrefix(`/api/arb/`)"
+      - "traefik.http.services.arb.loadbalancer.server.port=80"
+      - "traefik.http.routers.arb.entrypoints=web"
+
+
+  arb_broker:
+    build: ../arb
+    env_file: ./.env
+    volumes:
+      - ../arb:/app
+    command: faststream run src.broker:app
+    depends_on:
+      rmq:
+        condition: service_healthy
+
+
+  frontend:
+    image: node:24
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+    command: npm run dev -- --host 0.0.0.0 --port 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`) && !PathPrefix(`/api/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.entrypoints=web"
