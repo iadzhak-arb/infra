@@ -1,25 +1,53 @@
-# 🚀 Запуск через Docker Compose
-
-> **Это режим разработки** — всё настроено для быстрой отладки и hot-reload.  
-> Не используется в production.
+# Docker compose
+> Руководство по запуску платформы [Arb Scanner](https://github.com/iadzhak-arb)
 
 ---
 
-## 📋 Что нужно перед запуском
+## Сервисы
 
-### 1. Создайте файл `.env`
+| Сервис       | Описание                         | Репозиторий / Образ |
+|------------- |----------------------------------|----------------------|
+| `traefik`    | Обратный прокси (порт 80)        | traefik:v3.7                     |
+| `rmq`        | Брокер сообщений RabbitMQ        | rabbitmq:4.3-alpine                     |
+| `scanner`    | Сканер рынков                    | [scanner](https://github.com/iadzhak-arb/scanner) |
+| `auth`       | API авторизации                  | [auth](https://github.com/iadzhak-arb/auth) |
+| `arb`        | API данных арбитража             | [arb](https://github.com/iadzhak-arb/arb) |
+| `arb_broker` | Агреация и сохранение orderbooks |  [arb](https://github.com/iadzhak-arb/arb)             |
+| `frontend`   | Клиентский фронтенд              | [frontend](https://github.com/iadzhak-arb/frontend) |
 
-Клонированный `.env.example` в директорию **`infra/`** — там же, где лежит `docker-compose-dev.yaml`:
+---
 
-```bash
-cd infra
-cp .env.example .env
-```
+## Переменные окружения
 
-Заполните переменные окружения, которые потребуются сервисам.
 
-### 2. Убедитесь, что репозитории сервисов рядом
+| Переменная | Описание | Значение по умолчанию |
+|------------|----------|----------------------|
+| `EXCHANGES` | Список бирж (CCXT) | `["bybit", "mexc"]` |
+| `PROXIES` | Список прокси | `[""]` |
+| `QUEUE_ORDERBOOKS` | очередь orderbooks | `orderbooks` |
+| `QUEUE_GROUPS` | очередь groups | `groups` |
+| `MIN_LENGTH` | минимальная длина | `50` |
+| `TIMEOUT` | таймаут | `10` |
+| `RMQ_HOST` | хост RabbitMQ | `rmq` |
+| `RMQ_PORT` | порт RabbitMQ | `5672` |
+| `RMQ_USER` | пользователь RabbitMQ | `guest` |
+| `RMQ_PASS` | пароль RabbitMQ | `guest` |
+| `SECRET_KEY` | ключ для подписи JWT | `super_secret_key` |
+| `ALGORITHM` | алгоритм JWT | `HS256` |
+| `ALLOWED_HOSTS` | разрешённые хосты | `["localhost","127.0.0.1"]` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | срок действия access-токена | `15` |
+| `REFRESH_TOKEN_EXPIRE_MINUTES` | срок действия refresh-токена | `10080` |
+| `JWT_COOKIE_SECURE` | флаг secure для cookie | `False` |
+| `AUTH_DB_URL` | URL базы данных auth | `sqlite+aiosqlite:///database.db` |
+| `ARB_DB_URL` | URL базы данных arb | `sqlite+aiosqlite:///db.sqlite3` |
 
+---
+
+## Разработка
+
+### Требования
+
+Настройте переменные окружения в файле `.env`.  
 Все сервисы находятся в директориях **на одном уровне с `infra/`**:
 
 ```
@@ -28,23 +56,14 @@ cp .env.example .env
 ├── auth/
 ├── frontend/
 ├── infra/
-│   ├── .env
+│   ├── .env  ⟵ создайте файл с переменными окружения
+│   ├── .env.example  ⟵ образец файла с переменными окружения
 │   └── docker-compose-dev.yaml
 └── scanner/
 ```
 
-Если каких-то репозиториев ещё нет — клонируйте их:
 
-| Сервис     | Репозиторий |
-|------------|-------------|
-| **arb**    | [arb](https://github.com/iadzhak-arb/arb) |
-| **auth**   | [auth](https://github.com/iadzhak-arb/auth) |
-| **frontend** | [frontend](https://github.com/iadzhak-arb/frontend) |
-| **scanner** | [scanner](https://github.com/iadzhak-arb/scanner) |
-
----
-
-## ▶️ Запуск
+### Запуск
 
 Перейдите в директорию `infra/` и выполните:
 
@@ -52,25 +71,13 @@ cp .env.example .env
 docker compose -f docker-compose-dev.yaml up -d
 ```
 
-Сервисы поднимутся в фоновом режиме.
-
-### Проверьте, что всё работает
+Проверьте, что сервисы запустились:
 
 ```bash
 docker compose -f docker-compose-dev.yaml ps
 ```
 
-### Откройте в браузере
-
-- 🌐 **Сайт:** `http://localhost`
-- 📖 **Документация arb (арбитраж):** `http://localhost/api/arb/docs`
-- 🔐 **Документация auth (авторизация):** `http://localhost/api/auth/docs`
-
----
-
-## 🛑 Остановка
-
-Чтобы остановить сервисы, вернувшись в `infra/`:
+### Остановка
 
 ```bash
 docker compose -f docker-compose-dev.yaml down
@@ -78,16 +85,6 @@ docker compose -f docker-compose-dev.yaml down
 
 ---
 
-## 🗂️ Сервисы
-
-| Сервис       | Описание                    |
-|------------- |-----------------------------|
-| `traefik`   | Обратный прокси (порт 80)   |
-| `rmq`       | RabbitMQ                    |
-| `scanner`   | Сканер                      |
-| `auth`      | API авторизации             |
-| `arb`       | Основной API                |
-| `arb_broker`| Потребитель сообщений       |
-| `frontend`  | Vite dev server             |
+## Деплой
 
 ---
