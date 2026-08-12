@@ -1,6 +1,5 @@
 # Docker compose
-> Руководство по запуску платформы [Arb Scanner](https://github.com/iadzhak-arb)
-
+> Руководство по запуску платформы [Arb Scanner](https://github.com/iadzhak-arb)  
 
 ## Сервисы
 
@@ -14,7 +13,7 @@
 | `arb_broker` | Агреация и сохранение orderbooks |  [arb](https://github.com/iadzhak-arb/arb)             |
 | `frontend`   | Клиентский фронтенд              | [frontend](https://github.com/iadzhak-arb/frontend) |
 
-
+  
 ## Переменные окружения
 
 
@@ -39,7 +38,7 @@
 | `AUTH_DB_URL` | URL базы данных auth | `sqlite+aiosqlite:///database.db` |
 | `ARB_DB_URL` | URL базы данных arb | `sqlite+aiosqlite:///db.sqlite3` |
 
-
+  
 ## Разработка
 
 ### Требования
@@ -80,6 +79,6 @@ docker compose -f docker-compose-dev.yaml ps
 docker compose -f docker-compose-dev.yaml down
 ```
 
-
+  
 ## Деплой
 
