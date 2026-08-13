@@ -19,3 +19,45 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY }}
           source: "docker-compose.yml,docker-compose.infra.yml,docker-compose.migrations.yml,docker-compose.workers.yml"
           target: arb
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.HOST_USERNAME }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          script: |
+            cd arb
+            echo "Creating .env file"
+            cat > ".env" << EOF
+            EXCHANGES=${{ secrets.EXCHANGES }}
+            PROXIES=${{ secrets.PROXIES }}
+            QUEUE_ORDERBOOKS=orderbooks
+            QUEUE_GROUPS=groups
+            MIN_LENGTH=100
+            TIMEOUT=600
+            RMQ_HOST=rmq
+            RMQ_PORT=5672
+            RMQ_USER=${{ secrets.RMQ_USER }}
+            RMQ_PASS=${{ secrets.RMQ_PASS }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            ALGORITHM=HS256
+            ALLOWED_HOSTS='["arbcrypto.ru"]'
+            ACCESS_TOKEN_EXPIRE_MINUTES=15
+            REFRESH_TOKEN_EXPIRE_MINUTES=10080
+            JWT_COOKIE_SECURE=True
+            AUTH_DB_TYPE=postgres
+            AUTH_DB_USER=auth
+            AUTH_DB_PASS=${{ secrets.AUTH_DB_PASS }}
+            AUTH_DB_HOST=auth_db
+            AUTH_DB_PORT=5432
+            AUTH_DB_NAME=auth
+            ARB_DB_TYPE=postgres
+            ARB_DB_USER=auth
+            ARB_DB_PASS=${{ secrets.ARB_DB_PASS }}
+            ARB_DB_HOST=arb_db
+            ARB_DB_PORT=5432
+            ARB_DB_NAME=auth
+            EOF
+            docker compose pull
+            docker compose down
+            docker compose up -d
