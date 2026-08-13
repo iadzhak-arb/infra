@@ -1,0 +1,21 @@
+
+
+services:
+  scanner:
+    image: iadzhak/arb-scanner
+    env_file:
+      - .env
+    depends_on:
+      rmq:
+        condition: service_healthy
+
+  arb_broker:
+    image: iadzhak/arb-arb
+    env_file:
+      - .env
+    command: faststream run src.broker:app
+    depends_on:
+      rmq:
+        condition: service_healthy
+      arb_db:
+        condition: service_healthy

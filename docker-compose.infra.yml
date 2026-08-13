@@ -1,0 +1,99 @@
+volumes:
+  rmq_data:
+  arb_data:
+  auth_data:
+  letsencrypt:
+
+services:
+  rmq:
+    image: rabbitmq:4.3-alpine
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RMQ_PASS}
+    volumes:
+      - rmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  arb_db:
+    image: postgres:17.1-alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${ARB_DB_USER}
+      - POSTGRES_PASSWORD=${ARB_DB_PASS}
+      - POSTGRES_DB=${ARB_DB_NAME}
+    volumes:
+      - arb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${ARB_DB_USER}", "-d", "${ARB_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  auth_db:
+    image: postgres:17.1-alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${AUTH_DB_USER}
+      - POSTGRES_PASSWORD=${AUTH_DB_PASS}
+      - POSTGRES_DB=${AUTH_DB_NAME}
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${AUTH_DB_USER}", "-d", "${AUTH_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.7
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+
+      - "--certificatesresolvers.le.acme.email=yadzhak@yandex.ru"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json" # Path inside container volume
+      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.websecure.http.tls.certresolver=le"
+
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+      - "--api.dashboard=true"
+
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.arbcrypto.ru`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=iadzhak:$$apr1$$9bzHJoo1$$mDW2GM9ZfyWd26w7vXgNC."
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
+

@@ -1,0 +1,18 @@
+services:
+  arb_migrations:
+    image: iadzhak/arb-arb
+    env_file:
+      - .env
+    depends_on:
+      arb_db:
+        condition: service_healthy
+    command: alembic upgrade head
+
+  auth_migrations:
+    image: iadzhak/arb-auth
+    env_file:
+      - .env
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    command: alembic upgrade head

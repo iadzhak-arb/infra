@@ -1,0 +1,21 @@
+name: Main workflow
+run-name: Main workflow by ${{ github.actor }}
+on:
+  push:
+    branches:
+      - main
+jobs:
+  copy:
+    name: Copy to server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.HOST_USERNAME }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          source: "docker-compose.yml,docker-compose.infra.yml,docker-compose.migrations.yml,docker-compose.workers.yml"
+          target: arb
