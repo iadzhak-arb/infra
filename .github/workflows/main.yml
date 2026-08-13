@@ -1,6 +1,7 @@
 name: Main workflow
 run-name: Main workflow by ${{ github.actor }}
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
