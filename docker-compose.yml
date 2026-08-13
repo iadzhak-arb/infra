@@ -34,3 +34,4 @@ services:
       - "traefik.http.routers.frontend.rule=Host(`arbcrypto.ru`) && PathPrefix(`/`) && !PathPrefix(`/api/auth/`) && !PathPrefix(`/api/arb/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.tls.certresolver=le"
