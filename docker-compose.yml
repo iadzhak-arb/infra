@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.arb.rule=Host(`arbcrypto.ru`) && PathPrefix(`/api/arb/`) && !Host(`traefik.localhost`)"
+      - "traefik.http.routers.arb.rule=Host(`arbcrypto.ru`) && PathPrefix(`/api/arb/`)"
       - "traefik.http.routers.arb.entrypoints=websecure"
       - "traefik.http.services.arb.loadbalancer.server.port=80"
 
@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=Host(`arbcrypto.ru`) && PathPrefix(`/api/auth/`) && !Host(`traefik.localhost`)"
+      - "traefik.http.routers.auth.rule=Host(`arbcrypto.ru`) && PathPrefix(`/api/auth/`)"
       - "traefik.http.routers.auth.entrypoints=websecure"
       - "traefik.http.services.auth.loadbalancer.server.port=80"
 
