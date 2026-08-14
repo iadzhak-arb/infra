@@ -8,6 +8,7 @@ services:
     depends_on:
       rmq:
         condition: service_healthy
+    restart: unless-stopped
 
   arb_broker:
     image: iadzhak/arb-arb
@@ -19,3 +20,4 @@ services:
         condition: service_healthy
       arb_db:
         condition: service_healthy
+    restart: unless-stopped
