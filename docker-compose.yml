@@ -28,6 +28,8 @@ services:
 
   frontend:
     image: iadzhak/arb-frontend
+    volumes:
+      - ./docs:/usr/share/nginx/html/docs:ro
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
