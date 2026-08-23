@@ -58,7 +58,6 @@ jobs:
             ARB_DB_HOST=arb_db
             ARB_DB_PORT=5432
             ARB_DB_NAME=auth
-            VITE_YANDEX_METRICA=${{ secrets.VITE_YANDEX_METRICA }}
             EOF
             docker compose pull
             docker compose down

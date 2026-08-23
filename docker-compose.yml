@@ -28,8 +28,6 @@ services:
 
   frontend:
     image: iadzhak/arb-frontend
-    env_file:
-      - .env
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
